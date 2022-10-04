@@ -1,6 +1,7 @@
 using Chapter1FS3.Contexts;
 using Chapter1FS3.Interfaces;
 using Chapter1FS3.Repositories;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,24 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader()
         .AllowAnyMethod();
     });
+});
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultChallengeScheme = "jwtBearer";
+    options.DefaultAuthenticateScheme = "jwtBearer";
+}).AddJwtBearer("jwtBearer", options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateAudience = true,
+        ValidateIssuer = true,
+        ValidateLifetime = true,
+        IssuerSigningKey  = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes("Chapter1-autenticacao")),
+        ClockSkew = TimeSpan.FromMinutes(60),
+        ValidAudience = "chapter1.webapi",
+        ValidIssuer = "chapter1.webapi"
+};
 });
 
 builder.Services.AddScoped<SqlContext, SqlContext>();
@@ -38,6 +57,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("CorsPolicy");
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
